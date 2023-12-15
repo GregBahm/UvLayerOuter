@@ -26,97 +26,108 @@ public class MainScript : MonoBehaviour
         OrganizeCubes();
     }
 
-    private Node root; //Adding a root node that contains the default positions 0,0,0
-
-    public MainScript (int w, int h)
-    {
-        this.root = new Node { x = 0, y = 0, w = w, h = h };
-    }
-    
 
     private void OrganizeCubes()
     {
-        List<Square> ourOrderedList = squares.OrderByDescending(texture => texture.Volume).ToList(); //Using squares defined above which is a list of ret. Organize by Volume
-
-        TexSheet textureSheet = CreateTexSheet(); //Create the Texturesheet object
-
+        List<Square> ourOrderedList = squares.OrderByDescending(texture => texture.Volume).ToList();
+        TexSheet textureSheet = CreateTexSheet();
         bool placedBlock = false;
-        Rect remainingRect = new Rect(0, 0, 1, 1); //Initialize with the entire sheet
+
+        Transform myTransform = new GameObject("MyRectangle").transform;
+        Transform rightSpace = new GameObject("RightRectangle").transform;
+        Transform topSpace = new GameObject("TopRectangle").transform;
+
+        Rectangle RootRectangle = new Rectangle(myTransform, 1.0f, 1.0f); //public Rectangle(Transform spaceInfo, float width, float height)
+
+        RootRectangle.position = new Vector2(0.0f, 0.0f);
+
+        Rectangle RightRectangle = null;
+        Rectangle TopRectangle = null;
 
         foreach (Square texture in ourOrderedList)
         {
-            if (!placedBlock)
+            
+            if (placedBlock == false)
             {
                 texture.BottomLeftCorner = Vector2.zero;
                 placedBlock = true;
 
-                //Split the remaining area into two rectangles
-                Rect rect1, rect2;
+                // Make the first rectangle
+                RightRectangle = new Rectangle(rightSpace, RootRectangle.w - texture.Width, texture.myTransform.localScale.z);
+                RightRectangle.position = new Vector2(texture.BottomRightCorner.x, texture.BottomRightCorner.y);
 
-                if (remainingRect.width > remainingRect.height)
-                {
-                    // Split horizontally
-                    rect1 = new Rect(remainingRect.x, remainingRect.y, texture.Width, remainingRect.height);
-                    rect2 = new Rect(remainingRect.x + texture.Width, remainingRect.y, remainingRect.width - texture.Width, remainingRect.height);
-                }
-                else
-                {
-                    // Split vertically
-                    rect1 = new Rect(remainingRect.x, remainingRect.y, remainingRect.width, texture.Height);
-                    rect2 = new Rect(remainingRect.x, remainingRect.y + texture.Height, remainingRect.width, remainingRect.height - texture.Height);
-                }
-                // Now, check if the next cube can fit into either of the two rectangles
-                // Note: You need to implement the logic for checking if a cube fits into a rectangle
-                remainingRect = rect1;
-            }
+                // Make the second rectangle
+                TopRectangle = new Rectangle(topSpace, RootRectangle.w, RootRectangle.h - texture.myTransform.localScale.z);
+                TopRectangle.position = new Vector2(texture.TopLeftCorner.x, texture.TopLeftCorner.y);
+                
+            } 
             else
             {
                 UnityEngine.Debug.Log("There is a cube already at 0,0");
-                texture.BottomLeftCorner = new Vector2(1, 1);
+
+                if(TopRectangle.h > texture.myTransform.localScale.z)
+                {
+                    UnityEngine.Debug.Log("The Hieght of Top Rectangle is" + TopRectangle.h);
+                    UnityEngine.Debug.Log("The Hieght of Placed Texture is" + texture.myTransform.localScale.z);
+                    texture.BottomLeftCorner = new Vector2(TopRectangle.position.x, TopRectangle.position.y);
+                    TopRectangle.h = TopRectangle.h - texture.myTransform.localScale.z;
+                    UnityEngine.Debug.Log("The Height of the new rectangle is" + TopRectangle.h);
+                    //Set the new potion to be the TL corner of the upper texture #######################
+                }
+                
+                else if (RightRectangle.w > texture.myTransform.localScale.x)
+                {
+                    UnityEngine.Debug.Log("The Width of Right Rectangle is" + RightRectangle.w);
+                    texture.BottomLeftCorner = new Vector2(RightRectangle.position.x, RightRectangle.position.y);
+                    RightRectangle.w = RightRectangle.w - texture.Width;
+                    UnityEngine.Debug.Log("The Width of the new rectangle is" + RightRectangle.w);
+                    //Set the new potion to be the BR corner of the right texture ###########################
+                }
+                else
+                {
+                    
+                    UnityEngine.Debug.Log("Texture does not fit anywhere, sizing up the texture sheet");
+                    ResizeSheet(textureSheet);
+                    //Size up the texture sheet and then run again? #######################
+                }
             }
-
-            ////Get the distance between the sheetEnd and the edge of the new block on top and bottom;
-            ////somehow store that information;
-
-            ////If the cube is too large to be placed, size the sheet up one segment;
-
-            ////If there is no placed block, then default to putting the cube at space 0,0;
-            //if (placedBlock == false)
-            //{
-            //    texture.BottomLeftCorner = Vector2.zero;
-            //    placedBlock = true;
-            //    //divide the space into 2 and 
-            //}
-            //else
-            //{
-            //    UnityEngine.Debug.Log("There is a cube already at 0,0");
-            //    texture.BottomLeftCorner = new Vector2(1, 1); //Replace this with call function that checks the size between the new cube and the old one and then saves those values
-            //    UnityEngine.Debug.Log(placedBlock);
-
-            //}
-            ////ResizeSheet(textureSheet); //Size up the texture sheet
-            ////UnityEngine.Debug.Log(texture);
-            //UnityEngine.Debug.Log(textureSheet);
         }
     }
 
 
 
-    public class Node //Node contains all the positional data of our open space areas
+    public class Rectangle //Node contains all the positional data of our open space areas
     {
-        public int x;
-        public int y;
-        public int w;
-        public int h;
-        public bool used;
-        public Node up;
-        public Node right;
+        public Transform spaceInfo;
+        public Vector2 position //Represents a starting point
+        {
+            get
+            {
+                return new Vector2(spaceInfo.position.x, spaceInfo.position.z);
+            }
+            set
+            {
+                spaceInfo.position = new Vector3(value.x, spaceInfo.position.y, value.y);
+            }
+        }
+        public float w { get; set; }  //Represents the distance to the left
+        public float h { get; set; }  //represents the distance to the right
 
+        public Vector2 TopLeftCorner; // Add information about getting this position ###########################
+        public Vector2 BottomRightCorner; //Add information about getting this position ########################
+
+        public bool used { get; set; } //Represents if the node has been used
+        public Rectangle(Transform spaceInfo, float width, float height)
+        {
+            this.spaceInfo = spaceInfo;
+            w = width;
+            h = height;
+        }
     }
 
     private void ResizeSheet(TexSheet textureSheet)
     {
-        textureSheet.RealTexSize = new Vector2(.1f, .1f);//REPLACE with something that intakes the current value and adds it by 1)
+        textureSheet.RealTexSize = new Vector2(.2f, .2f);//REPLACE with something that intakes the current value and adds it by 1)
         textureSheet.TexBottomLeftCorner = Vector2.zero; //Always place the sheet back to corner (0,0,0)
     }
 
@@ -238,9 +249,6 @@ public class TexSheet
             TexCenter = ConvertCornerToCenter(value, false, true);
         }
     }
-
-
-
 
     public TexSheet(Transform info)
     {
@@ -366,9 +374,6 @@ public class Square
         return Width == rect.Width && Height == rect.Height;
     }
 
-
-
-
     public Square(Transform t)
     {
         if(t.localScale.x < 0)
@@ -380,10 +385,10 @@ public class Square
         Size = new Vector2(t.localScale.x, t.localScale.z);
     }
 
-    private Vector2 GetCornerFromCenter(bool isCornerTop, bool isCornerLeft)
+    private Vector2 GetCornerFromCenter(bool isCornerTop, bool isCornerLeft) //false false
     {
         float yOffset = isCornerTop ? Size.y : -Size.y;
-        float xOffset = isCornerLeft ? Size.x : -Size.x;
+        float xOffset = isCornerLeft ? -Size.x : Size.x;
         return Center + new Vector2(xOffset, yOffset) * .5f;
     }
 
