@@ -25,25 +25,60 @@ public class MainScript : MonoBehaviour
         SquareBreakdown currentBreakdown;
         squares = CreateRandomCubes();
 
-        Square currentSquare = new Square(new GameObject("Texture Sheet").transform);
-        currentSquare.BottomLeftCorner = Vector2.zero;
-        currentSquare.Visualize();
+        Square textureSquare = new Square(new GameObject("Texture Sheet").transform);
+        textureSquare.BottomLeftCorner = Vector2.zero;
+        textureSquare.Visualize();
 
+        List<Square> containingSquares = new List<Square>(); //Make a list of containing squares
 
         List<Square> ourOrderedList = squares.OrderByDescending(texture => texture.Volume).ToList();
 
         List<Square> allSquaresToVisualize = new List<Square>();
 
-        
-        for (int i = 0; i < 1; i++)
+
+        for (int i = 0; i < ourOrderedList.Count; i++)
         {
             Square unplacedSquare = ourOrderedList[i];
-            currentBreakdown = currentSquare.GetBreakdown(unplacedSquare);
+            //If its the first square this will always get placed at vector2.zero
+            if  (i == 0)
+            {
+                currentBreakdown = textureSquare.GetBreakdown(unplacedSquare);
+                unplacedSquare.BottomLeftCorner = Vector2.zero;
 
-            
+                allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
+                allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
 
-            allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
-            allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
+                containingSquares.Add(currentBreakdown.TopRectangle);
+                containingSquares.Add(currentBreakdown.RightRectangle);
+            }
+
+            else
+            {
+                foreach (Square square in containingSquares)
+                {
+                    if (square.Used == true) //check if square is used.
+                    {
+                        Debug.Log("Not doing the thing");
+                        continue;
+                    }
+                    else
+                    {
+                        //Add logic for figuring out which square to put the object in. 
+                        
+                    }
+                    
+                }
+
+                //Square SquareToUse = square;
+                //currentBreakdown = SquareToUse.GetBreakdown(unplacedSquare);
+
+                //containingSquares.Add(currentBreakdown.TopRectangle);
+                //containingSquares.Add(currentBreakdown.RightRectangle);
+
+                //allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
+                //allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
+            }
+
         }
         VisualizeSquares(allSquaresToVisualize);
     }
@@ -282,6 +317,14 @@ public class Square
         }
     }
 
+    private bool used;
+
+    public bool Used
+    {
+        get { return used; }
+        set { used = value; }
+    }
+
     public float Volume
     {
         get
@@ -358,13 +401,25 @@ public class SquareBreakdown
     public Square SourceSquare { get => sourceSquare; }
 
     private Square topRectangle;
-    public Square TopRectangle { get => topRectangle; }
-
+    public Square TopRectangle
+    {
+        get
+        {
+            return topRectangle;
+        }
+        set
+        {
+            topRectangle = TopRectangle;
+        }
+    }
     private Square rightRectangle;
     public Square RightRectangle { get => rightRectangle; }
 
+
+
     public SquareBreakdown(Square containingSquare, Square sourceSquare)
-    {
+    {      
+        
         this.sourceSquare = sourceSquare;
 
         //Get the differences of hieght and width of the new spaces
@@ -376,29 +431,27 @@ public class SquareBreakdown
             rightRectangle = new Square(new GameObject("Right empty space square").transform);
             rightRectangle.Size = new Vector2(containingSquare.Width - sourceSquare.Width, containingSquare.Height);
             rightRectangle.BottomLeftCorner = new Vector2(sourceSquare.Width, 0);
-
+            rightRectangle.Used = false;
+            
 
             topRectangle = new Square(new GameObject("Top empty space square").transform);
             topRectangle.Size = new Vector2(SourceSquare.Width, containingSquare.Height - sourceSquare.Height);
             topRectangle.BottomLeftCorner = new Vector2(0, sourceSquare.Height);
-
-            if (sourceSquare.Width < rightRectangle.Width)
-            {
-                sourceSquare.BottomLeftCorner = rightRectangle.BottomLeftCorner;
-            }
-            else
-            {
-                sourceSquare.BottomLeftCorner = topRectangle.BottomLeftCorner;
-            }
-
+            topRectangle.Used = false;
         }
+
+
         else
         {
             rightRectangle = new Square(new GameObject("Right empty space square").transform);
             rightRectangle.Size = new Vector2(containingSquare.Width - sourceSquare.Width, SourceSquare.Height);
+            rightRectangle.BottomLeftCorner = new Vector2(sourceSquare.Width, 0);
+            rightRectangle.Used = false;
 
             topRectangle = new Square(new GameObject("Top empty space square").transform);
             topRectangle.Size = new Vector2(containingSquare.Width, containingSquare.Height - sourceSquare.Height);
+            topRectangle.BottomLeftCorner = new Vector2(0, sourceSquare.Height);
+            topRectangle.Used = false;
         }
     }
 }
