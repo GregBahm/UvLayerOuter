@@ -22,106 +22,38 @@ public class MainScript : MonoBehaviour
 
     private void Start()
     {
-        squares = CreateCubes();
-        OrganizeCubes();
-    }
+        SquareBreakdown currentBreakdown;
+        squares = CreateRandomCubes();
+
+        Square currentSquare = new Square(new GameObject("Texture Sheet").transform);
+        currentSquare.BottomLeftCorner = Vector2.zero;
+        currentSquare.Visualize();
 
 
-    private void OrganizeCubes()
-    {
         List<Square> ourOrderedList = squares.OrderByDescending(texture => texture.Volume).ToList();
-        TexSheet textureSheet = CreateTexSheet();
-        bool placedBlock = false;
 
-        Transform myTransform = new GameObject("MyRectangle").transform;
-        Transform rightSpace = new GameObject("RightRectangle").transform;
-        Transform topSpace = new GameObject("TopRectangle").transform;
+        List<Square> allSquaresToVisualize = new List<Square>();
 
-        Rectangle RootRectangle = new Rectangle(myTransform, 1.0f, 1.0f); //public Rectangle(Transform spaceInfo, float width, float height)
-
-        RootRectangle.position = new Vector2(0.0f, 0.0f);
-
-        Rectangle RightRectangle = null;
-        Rectangle TopRectangle = null;
-
-        foreach (Square texture in ourOrderedList)
+        
+        for (int i = 0; i < 1; i++)
         {
+            Square unplacedSquare = ourOrderedList[i];
+            currentBreakdown = currentSquare.GetBreakdown(unplacedSquare);
+
             
-            if (placedBlock == false)
-            {
-                texture.BottomLeftCorner = Vector2.zero;
-                placedBlock = true;
 
-                // Make the first rectangle
-                RightRectangle = new Rectangle(rightSpace, RootRectangle.w - texture.Width, texture.myTransform.localScale.z);
-                RightRectangle.position = new Vector2(texture.BottomRightCorner.x, texture.BottomRightCorner.y);
-
-                // Make the second rectangle
-                TopRectangle = new Rectangle(topSpace, RootRectangle.w, RootRectangle.h - texture.myTransform.localScale.z);
-                TopRectangle.position = new Vector2(texture.TopLeftCorner.x, texture.TopLeftCorner.y);
-                
-            } 
-            else
-            {
-                UnityEngine.Debug.Log("There is a cube already at 0,0");
-
-                if(TopRectangle.h > texture.myTransform.localScale.z)
-                {
-                    UnityEngine.Debug.Log("The Hieght of Top Rectangle is" + TopRectangle.h);
-                    UnityEngine.Debug.Log("The Hieght of Placed Texture is" + texture.myTransform.localScale.z);
-                    texture.BottomLeftCorner = new Vector2(TopRectangle.position.x, TopRectangle.position.y);
-                    TopRectangle.h = TopRectangle.h - texture.myTransform.localScale.z;
-                    UnityEngine.Debug.Log("The Height of the new rectangle is" + TopRectangle.h);
-                    //Set the new potion to be the TL corner of the upper texture #######################
-                }
-                
-                else if (RightRectangle.w > texture.myTransform.localScale.x)
-                {
-                    UnityEngine.Debug.Log("The Width of Right Rectangle is" + RightRectangle.w);
-                    texture.BottomLeftCorner = new Vector2(RightRectangle.position.x, RightRectangle.position.y);
-                    RightRectangle.w = RightRectangle.w - texture.Width;
-                    UnityEngine.Debug.Log("The Width of the new rectangle is" + RightRectangle.w);
-                    //Set the new potion to be the BR corner of the right texture ###########################
-                }
-                else
-                {
-                    
-                    UnityEngine.Debug.Log("Texture does not fit anywhere, sizing up the texture sheet");
-                    ResizeSheet(textureSheet);
-                    //Size up the texture sheet and then run again? #######################
-                }
-            }
+            allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
+            allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
         }
+        VisualizeSquares(allSquaresToVisualize);
     }
 
 
-
-    public class Rectangle //Node contains all the positional data of our open space areas
+    private void VisualizeSquares(List<Square> theSquareSpaces)
     {
-        public Transform spaceInfo;
-        public Vector2 position //Represents a starting point
+        foreach (Square square in theSquareSpaces)
         {
-            get
-            {
-                return new Vector2(spaceInfo.position.x, spaceInfo.position.z);
-            }
-            set
-            {
-                spaceInfo.position = new Vector3(value.x, spaceInfo.position.y, value.y);
-            }
-        }
-        public float w { get; set; }  //Represents the distance to the left
-        public float h { get; set; }  //represents the distance to the right
-
-        public Vector2 TopLeftCorner; // Add information about getting this position ###########################
-        public Vector2 BottomRightCorner; //Add information about getting this position ########################
-
-        public bool used { get; set; } //Represents if the node has been used
-        public Rectangle(Transform spaceInfo, float width, float height)
-        {
-            this.spaceInfo = spaceInfo;
-            w = width;
-            h = height;
+            square.Visualize();
         }
     }
 
@@ -141,12 +73,13 @@ public class MainScript : MonoBehaviour
         return textureSheet;
     }
 
-    private List<Square> CreateCubes()
+    private List<Square> CreateRandomCubes()
     {
         List<Square> ret = new List<Square>();
         for (int i = 0; i < cubesCount; i++)
         {
             GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            obj.name = "Random Cube " + i.ToString();
             float randomX = UnityEngine.Random.value;
             float randomZ = UnityEngine.Random.value;
             obj.transform.localScale = new Vector3(randomX, 1, randomZ);
@@ -383,6 +316,7 @@ public class Square
         myTransform = t;
         Center = new Vector2(t.position.x, t.position.z);
         Size = new Vector2(t.localScale.x, t.localScale.z);
+
     }
 
     private Vector2 GetCornerFromCenter(bool isCornerTop, bool isCornerLeft) //false false
@@ -403,10 +337,68 @@ public class Square
     {
         return "Square of size " + Size.x + "," + Size.y + " at " + Center.x + ", " + Center.y;
     }
+
+    internal void Visualize()
+    {
+        Transform cubeTransform = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+        cubeTransform.gameObject.name = "visualization of " + myTransform.name;
+        cubeTransform.position = myTransform.position;
+        cubeTransform.localScale = myTransform.localScale * .99f;
+    }
+
+    public SquareBreakdown GetBreakdown(Square unplacedSquare)
+    {
+        return new SquareBreakdown(this, unplacedSquare);
+    }
 }
 
+public class SquareBreakdown
+{
+    private Square sourceSquare;
+    public Square SourceSquare { get => sourceSquare; }
+
+    private Square topRectangle;
+    public Square TopRectangle { get => topRectangle; }
+
+    private Square rightRectangle;
+    public Square RightRectangle { get => rightRectangle; }
+
+    public SquareBreakdown(Square containingSquare, Square sourceSquare)
+    {
+        this.sourceSquare = sourceSquare;
+
+        //Get the differences of hieght and width of the new spaces
+        float diffWidth = containingSquare.Width - sourceSquare.Width;
+        float diffHeight = containingSquare.Height - sourceSquare.Height;
+
+        if (diffWidth > diffHeight) //If the difference in width is greater than the difference of height split the space vertically. If not, split horizontally
+        {
+            rightRectangle = new Square(new GameObject("Right empty space square").transform);
+            rightRectangle.Size = new Vector2(containingSquare.Width - sourceSquare.Width, containingSquare.Height);
+            rightRectangle.BottomLeftCorner = new Vector2(sourceSquare.Width, 0);
 
 
+            topRectangle = new Square(new GameObject("Top empty space square").transform);
+            topRectangle.Size = new Vector2(SourceSquare.Width, containingSquare.Height - sourceSquare.Height);
+            topRectangle.BottomLeftCorner = new Vector2(0, sourceSquare.Height);
 
+            if (sourceSquare.Width < rightRectangle.Width)
+            {
+                sourceSquare.BottomLeftCorner = rightRectangle.BottomLeftCorner;
+            }
+            else
+            {
+                sourceSquare.BottomLeftCorner = topRectangle.BottomLeftCorner;
+            }
 
+        }
+        else
+        {
+            rightRectangle = new Square(new GameObject("Right empty space square").transform);
+            rightRectangle.Size = new Vector2(containingSquare.Width - sourceSquare.Width, SourceSquare.Height);
 
+            topRectangle = new Square(new GameObject("Top empty space square").transform);
+            topRectangle.Size = new Vector2(containingSquare.Width, containingSquare.Height - sourceSquare.Height);
+        }
+    }
+}
