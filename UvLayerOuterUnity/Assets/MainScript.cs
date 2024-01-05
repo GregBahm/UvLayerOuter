@@ -35,7 +35,10 @@ public class MainScript : MonoBehaviour
 
         List<Square> allSquaresToVisualize = new List<Square>();
 
+        foreach (Square square in containingSquares)
+        {
 
+        }
         for (int i = 0; i < ourOrderedList.Count; i++)
         {
             Square unplacedSquare = ourOrderedList[i];
@@ -54,31 +57,40 @@ public class MainScript : MonoBehaviour
 
             else
             {
-                foreach (Square square in containingSquares)
+
+                Square SquareWithTheLargestHeight = containingSquares.Where(square => !square.Used).OrderByDescending(square => square.Height).FirstOrDefault(); //out of the list, get the largest height
+                Square SquareWithTheLargestWidth = containingSquares.Where(square => !square.Used).OrderByDescending(square => square.Width).FirstOrDefault(); //out of the list, get the largest width
+
+                //Debug.Log($"Largest height: {SquareWithTheLargestHeight?.myTransform.name}");
+                //Debug.Log($"Largest width: {SquareWithTheLargestWidth?.myTransform.name}");
+
+                float HeightDiff = SquareWithTheLargestHeight.Height - unplacedSquare.Height;
+                float WidthDiff = SquareWithTheLargestWidth.Width - unplacedSquare.Width;
+
+                if (HeightDiff > WidthDiff)
                 {
-                    if (square.Used == true) //check if square is used.
-                    {
-                        Debug.Log("Not doing the thing");
-                        continue;
-                    }
-                    else
-                    {
-                        //Add logic for figuring out which square to put the object in. 
-                        
-                    }
-                    
+                    Square SquareToUse = SquareWithTheLargestHeight;
+                    currentBreakdown = SquareToUse.GetBreakdown(unplacedSquare);
+
+                    containingSquares.Add(currentBreakdown.TopRectangle);
+                    containingSquares.Add(currentBreakdown.RightRectangle);
+
+                    allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
+                    allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
+                }
+                else
+                {
+                    Square SquareToUse = SquareWithTheLargestWidth;
+                    currentBreakdown = SquareToUse.GetBreakdown(unplacedSquare);
+
+                    containingSquares.Add(currentBreakdown.TopRectangle);
+                    containingSquares.Add(currentBreakdown.RightRectangle);
+
+                    allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
+                    allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
                 }
 
-                //Square SquareToUse = square;
-                //currentBreakdown = SquareToUse.GetBreakdown(unplacedSquare);
-
-                //containingSquares.Add(currentBreakdown.TopRectangle);
-                //containingSquares.Add(currentBreakdown.RightRectangle);
-
-                //allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
-                //allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
             }
-
         }
         VisualizeSquares(allSquaresToVisualize);
     }
@@ -386,7 +398,7 @@ public class Square
         Transform cubeTransform = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
         cubeTransform.gameObject.name = "visualization of " + myTransform.name;
         cubeTransform.position = myTransform.position;
-        cubeTransform.localScale = myTransform.localScale * .99f;
+        cubeTransform.localScale = myTransform.localScale * 1.0f;
     }
 
     public SquareBreakdown GetBreakdown(Square unplacedSquare)
