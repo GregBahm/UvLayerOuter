@@ -26,6 +26,7 @@ public class MainScript : MonoBehaviour
         squares = CreateRandomCubes();
 
         Square textureSquare = new Square(new GameObject("Texture Sheet").transform);
+        textureSquare.Size = new Vector2(5, 5);
         textureSquare.BottomLeftCorner = Vector2.zero;
         textureSquare.Visualize();
 
@@ -77,6 +78,10 @@ public class MainScript : MonoBehaviour
 
                     allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
                     allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
+                    //figure out where to place cube
+
+                    unplacedSquare.BottomLeftCorner = SquareWithTheLargestHeight.BottomLeftCorner;
+                    SquareWithTheLargestHeight.Used = true;
                 }
                 else
                 {
@@ -88,6 +93,9 @@ public class MainScript : MonoBehaviour
 
                     allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
                     allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
+
+                    unplacedSquare.BottomLeftCorner = SquareWithTheLargestWidth.BottomLeftCorner;
+                    SquareWithTheLargestWidth.Used = true;
                 }
 
             }
@@ -104,21 +112,6 @@ public class MainScript : MonoBehaviour
         }
     }
 
-    private void ResizeSheet(TexSheet textureSheet)
-    {
-        textureSheet.RealTexSize = new Vector2(.2f, .2f);//REPLACE with something that intakes the current value and adds it by 1)
-        textureSheet.TexBottomLeftCorner = Vector2.zero; //Always place the sheet back to corner (0,0,0)
-    }
-
-    private TexSheet CreateTexSheet()
-    {   
-        //Generate Texture Sheet
-        GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        TexSheet textureSheet = new TexSheet(obj.transform);
-        textureSheet.RealTexSize = new Vector2(.1f, .1f);
-        textureSheet.TexBottomLeftCorner = Vector2.zero;
-        return textureSheet;
-    }
 
     private List<Square> CreateRandomCubes()
     {
@@ -138,124 +131,6 @@ public class MainScript : MonoBehaviour
     }
    
 }
-
-public class TexSheet
-{
-    public Transform texInfo;
-
-
-    public Vector2 TexCenter
-    {
-        get
-        {
-            return new Vector2(texInfo.position.x, texInfo.position.z);
-        }
-        set
-        {
-            texInfo.position = new Vector3(value.x, 0, value.y);
-        }
-    }
-    public Vector2 TexSize
-    {
-        get
-        {
-            return new Vector2(texInfo.localScale.x * 10, texInfo.localScale.z * 10);
-        }
-        set
-        {
-            texInfo.localScale = new Vector3(value.x * 10, 0, value.y * 10);
-        }
-    }
-    public float TexLength
-    {
-        get { return TexBottomRightCorner.x; }
-    }
-    public float TexHieght
-    {
-        get { return TexTopLeftCorner.y; }
-    }
-    public Vector2 RealTexSize
-    {
-        get
-        {
-            return new Vector2(texInfo.localScale.x, texInfo.localScale.z);
-        }
-        set
-        {
-            texInfo.localScale = new Vector3(value.x, .01f, value.y);
-        }
-    }
-    public Vector2 TexTopLeftCorner
-    {
-        get
-        {
-            return GetCornerFromCenter(true, true);
-        }
-        set
-        {
-            TexCenter = ConvertCornerToCenter(value, true, true);
-        }
-    }
-    public Vector2 TexTopRightCorner
-    {
-        get
-        {
-            return GetCornerFromCenter(true, false);
-        }
-        set
-        {
-            TexCenter = ConvertCornerToCenter(value, true, false);
-        }
-    }
-    public Vector2 TexBottomRightCorner
-    {
-        get
-        {
-            return GetCornerFromCenter(false, false);
-        }
-        set
-        {
-            TexCenter = ConvertCornerToCenter(value, false, false);
-        }
-    }
-    public Vector2 TexBottomLeftCorner
-    {
-        get
-        {
-            return GetCornerFromCenter(false, true);
-        }
-        set
-        {
-            TexCenter = ConvertCornerToCenter(value, false, true);
-        }
-    }
-
-    public TexSheet(Transform info)
-    {
-        texInfo = info;
-        TexCenter = new Vector2(info.position.x, info.position.z);
-        RealTexSize = new Vector2(texInfo.localScale.x, texInfo.localScale.z);
-        TexSize = new Vector2(texInfo.localScale.x * 10, texInfo.localScale.z *10);
-
-    }
-    private Vector2 GetCornerFromCenter(bool isCornerTop, bool isCornerLeft) //
-    {
-        float yOffset = isCornerTop ? TexSize.y : -TexSize.y;
-        float xOffset = isCornerLeft ? -TexSize.x : TexSize.x;
-        return TexCenter + new Vector2(xOffset, yOffset) * .5f;
-    }
-    private Vector2 ConvertCornerToCenter(Vector2 cornerValue, bool isCornerTop, bool isCornerLeft) //
-    {
-        float yOffset = isCornerTop ? -RealTexSize.y : RealTexSize.y;
-        float xOffset = isCornerLeft ? RealTexSize.x : -RealTexSize.x;
-        return cornerValue + new Vector2(xOffset, yOffset) * 5;
-    }
-    public override string ToString()
-    {
-        return "Texture Sheet Length is " + (TexLength) + ", The hieght is " + (TexHieght);
-    }
-}
-
 
 public class Square
 {
@@ -442,13 +317,13 @@ public class SquareBreakdown
         {
             rightRectangle = new Square(new GameObject("Right empty space square").transform);
             rightRectangle.Size = new Vector2(containingSquare.Width - sourceSquare.Width, containingSquare.Height);
-            rightRectangle.BottomLeftCorner = new Vector2(sourceSquare.Width, 0);
+            rightRectangle.BottomLeftCorner = new Vector2(containingSquare.BottomLeftCorner.x + sourceSquare.Width, containingSquare.BottomLeftCorner.y);
             rightRectangle.Used = false;
             
 
             topRectangle = new Square(new GameObject("Top empty space square").transform);
             topRectangle.Size = new Vector2(SourceSquare.Width, containingSquare.Height - sourceSquare.Height);
-            topRectangle.BottomLeftCorner = new Vector2(0, sourceSquare.Height);
+            topRectangle.BottomLeftCorner = new Vector2(containingSquare.BottomLeftCorner.x, containingSquare.BottomLeftCorner.y + sourceSquare.Height);
             topRectangle.Used = false;
         }
 
@@ -457,12 +332,12 @@ public class SquareBreakdown
         {
             rightRectangle = new Square(new GameObject("Right empty space square").transform);
             rightRectangle.Size = new Vector2(containingSquare.Width - sourceSquare.Width, SourceSquare.Height);
-            rightRectangle.BottomLeftCorner = new Vector2(sourceSquare.Width, 0);
+            rightRectangle.BottomLeftCorner = new Vector2(containingSquare.BottomLeftCorner.x + sourceSquare.Width, containingSquare.BottomLeftCorner.y);
             rightRectangle.Used = false;
 
             topRectangle = new Square(new GameObject("Top empty space square").transform);
             topRectangle.Size = new Vector2(containingSquare.Width, containingSquare.Height - sourceSquare.Height);
-            topRectangle.BottomLeftCorner = new Vector2(0, sourceSquare.Height);
+            topRectangle.BottomLeftCorner = new Vector2(containingSquare.BottomLeftCorner.x, containingSquare.BottomLeftCorner.y + sourceSquare.Height);
             topRectangle.Used = false;
         }
     }
