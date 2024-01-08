@@ -32,11 +32,12 @@ public class MainScript : MonoBehaviour
 
         List<Square> containingSquares = new List<Square>(); //Make a list of containing squares
 
-        List<Square> ourOrderedList = squares.OrderByDescending(texture => texture.Volume).ToList();
+        List<Square> ourOrderedList = squares.OrderByDescending(texture => texture.Volume).ToList(); //Ordered list of squares to place
 
-        List<Square> allSquaresToVisualize = new List<Square>();
+        List<Square> allSquaresToVisualize = new List<Square>(); //Make a list of squares we'll need to actually make
 
-        
+        bool FoundSquarePlacementZone = false;
+
         for (int i = 0; i < ourOrderedList.Count; i++)
         {
             Square unplacedSquare = ourOrderedList[i];
@@ -55,45 +56,41 @@ public class MainScript : MonoBehaviour
 
             else
             {
-                Square SquareWithTheLargestVolume = containingSquares.Where(square => !square.Used).OrderByDescending(square => square.Volume).FirstOrDefault();
-                Square SquareWithTheLargestHeight = containingSquares.Where(square => !square.Used).OrderByDescending(square => square.Height).FirstOrDefault(); //out of the list, get the largest height
-                Square SquareWithTheLargestWidth = containingSquares.Where(square => !square.Used).OrderByDescending(square => square.Width).FirstOrDefault(); //out of the list, get the largest width
 
-                //Debug.Log($"Largest height: {SquareWithTheLargestHeight?.myTransform.name}");
-                //Debug.Log($"Largest width: {SquareWithTheLargestWidth?.myTransform.name}");
+                List<Square> OrderedSquares = containingSquares.Where(square => !square.Used).OrderByDescending(square => square.Volume).ToList();
+                Square SquareToUse = null;
 
-                float HeightDiff = SquareWithTheLargestHeight.Height - unplacedSquare.Height;
-                float WidthDiff = SquareWithTheLargestWidth.Width - unplacedSquare.Width;
-
-                if (unplacedSquare.Height < SquareWithTheLargestHeight.Height & unplacedSquare.Width < SquareWithTheLargestHeight.Width)
+                while (!FoundSquarePlacementZone)
                 {
-                    Square SquareToUse = SquareWithTheLargestHeight;
-                    currentBreakdown = SquareToUse.GetBreakdown(unplacedSquare);
-
-                    containingSquares.Add(currentBreakdown.TopRectangle);
-                    containingSquares.Add(currentBreakdown.RightRectangle);
-
-                    allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
-                    allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
-                    //figure out where to place cube
-
-                    unplacedSquare.BottomLeftCorner = SquareWithTheLargestHeight.BottomLeftCorner;
-                    SquareWithTheLargestHeight.Used = true;
+                    for (int x = 0; x < OrderedSquares.Count; x++)
+                    {
+                        float HeightCheck = OrderedSquares[x].Height - unplacedSquare.Height;
+                        float WidthCheck = OrderedSquares[x].Width - unplacedSquare.Width;
+                        
+                        if (HeightCheck < 0 || WidthCheck < 0) 
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            SquareToUse = OrderedSquares[x];
+                            FoundSquarePlacementZone = true; // Set the flag to exit the loop
+                        }
+                    }
                 }
-                else if (unplacedSquare.Width < SquareWithTheLargestWidth.Width & unplacedSquare.Height < SquareWithTheLargestWidth.Height)
-                {
-                    Square SquareToUse = SquareWithTheLargestWidth;
-                    currentBreakdown = SquareToUse.GetBreakdown(unplacedSquare);
+                
+                currentBreakdown = SquareToUse.GetBreakdown(unplacedSquare);
 
-                    containingSquares.Add(currentBreakdown.TopRectangle);
-                    containingSquares.Add(currentBreakdown.RightRectangle);
+                containingSquares.Add(currentBreakdown.TopRectangle);
+                containingSquares.Add(currentBreakdown.RightRectangle);
 
-                    allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
-                    allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
+                allSquaresToVisualize.Add(currentBreakdown.TopRectangle);
+                allSquaresToVisualize.Add(currentBreakdown.RightRectangle);
+                
 
-                    unplacedSquare.BottomLeftCorner = SquareWithTheLargestWidth.BottomLeftCorner;
-                    SquareWithTheLargestWidth.Used = true;
-                }
+                unplacedSquare.BottomLeftCorner = SquareToUse.BottomLeftCorner;
+                SquareToUse.Used = true;
+                FoundSquarePlacementZone = false; // Reset to go through the loop again
             }
         }
         VisualizeSquares(allSquaresToVisualize);
