@@ -169,6 +169,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   OneUvShell: {fileID: 2540817853737639666, guid: a060aea3499711f42bf3ae3aa4de63ce, type: 3}
   TwoUvShell: {fileID: 2540817853737639666, guid: 892908ec5c539054885da7402b2ead7a, type: 3}
+  Avatar: {fileID: 3637877926119396673, guid: 818066f54248ef64b945b59f7f4f1cca, type: 3}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
