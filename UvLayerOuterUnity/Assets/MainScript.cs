@@ -26,7 +26,7 @@ public class MainScript : MonoBehaviour
         squares = CreateRandomCubes();
 
         Square textureSquare = new Square(new GameObject("Texture Sheet").transform);
-        textureSquare.Size = new Vector2(5, 5);
+        textureSquare.Size = new Vector2(10, 10); //200, 10,10  -- 3, 1,1
         textureSquare.BottomLeftCorner = Vector2.zero;
         textureSquare.Visualize();
 
@@ -57,7 +57,7 @@ public class MainScript : MonoBehaviour
             else
             {
 
-                List<Square> OrderedSquares = containingSquares.Where(square => !square.Used).OrderByDescending(square => square.Volume).ToList();
+                List<Square> OrderedSquares = containingSquares.Where(square => !square.Used).OrderBy(square => square.Volume).ToList();
                 Square SquareToUse = null;
 
                 while (!FoundSquarePlacementZone)
@@ -77,6 +77,7 @@ public class MainScript : MonoBehaviour
                             FoundSquarePlacementZone = true; // Set the flag to exit the loop
                         }
                     }
+                    break;
                 }
                 
                 currentBreakdown = SquareToUse.GetBreakdown(unplacedSquare);
