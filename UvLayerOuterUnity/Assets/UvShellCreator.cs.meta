@@ -3,7 +3,10 @@ guid: f0bea2b36b42d204ba37fcc7bb8a47e1
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - OneUvShell: {fileID: 2540817853737639666, guid: a060aea3499711f42bf3ae3aa4de63ce, type: 3}
+  - TwoUvShell: {fileID: 2540817853737639666, guid: 892908ec5c539054885da7402b2ead7a, type: 3}
+  - Avatar: {fileID: 3637877926119396673, guid: 818066f54248ef64b945b59f7f4f1cca, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
