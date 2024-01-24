@@ -22,7 +22,7 @@ public class UvShellCreator : MonoBehaviour
     public static List<Tri> GetUvShells(Mesh mesh)
     {
         List<Tri> AllTris = new List<Tri>(); //Define a list that contains the entire shell array
-        List<Tri> IntermediateShells = new List<Tri>(); //Make a list that holds information for shells being made
+        List<Tri> IntermediateTris = new List<Tri>(); //Make a list that holds information for shells being made
 
         List<UvShell> CompletedUvShells = new List<UvShell>(); //Make a list of completed UV shells that we can borrow away from AllUvShells
 
@@ -33,40 +33,44 @@ public class UvShellCreator : MonoBehaviour
             AllTris.Add(Tri);
         }
 
-        for (int x = 0; x < AllTris.Count; x++)
-        {
+        IntermediateTris.Add(AllTris[2]); //Add the first triangle to start the process. 
 
-            List <Tri> LoggedTris = LogConnectingTris(AllTris[x], AllTris); // returns a list of connected Tris and removes them from AllTris
 
-            // ################## Add logic for if (LoggedTris.Any()) then chech if those have any connections until it bring back nothing (else) #################
+        List<Tri> LoggedTris = LogConnectingTris(IntermediateTris, AllTris); // returns a list of connected Tris and removes them from AllTris
 
-        }
-        return AllTris;
+
+
+        return LoggedTris;
     }
-    private static List<Tri> LogConnectingTris(Tri InputTriangle, List<Tri> AllTris) // Log intersecting triangles
+    private static List<Tri> LogConnectingTris(List<Tri> InputTriangle, List<Tri> AllTris) // Log intersecting triangles
     {
-        
-        List<Tri> LoggedTris = Enumerable.Range(0, AllTris.Count)
-            .Where(i => AllTris[i].GetTri().Intersect(InputTriangle.GetTri()).Any())
+        List<Tri> LoggedTris = new List<Tri>();
+        List<int> trianglesToRemove = new List<int>();
+
+        for (int x = 0; x < InputTriangle.Count; x++)
+        {
+            LoggedTris = Enumerable.Range(0, AllTris.Count)
+            .Where(i =>
+            {
+                bool intersects = AllTris[i].GetTri().Intersect(InputTriangle[x].GetTri()).Any();
+                if (intersects)
+                {
+                    // If intersected, mark the triangle index for removal
+                    trianglesToRemove.Add(i);
+                }
+                return intersects;
+            })
             .Select(i => AllTris[i])
             .ToList();
 
-        if (LoggedTris.Any())
-        {
-            for (int i = 0; i < LoggedTris.Count; i++)
-            {
-                    AllTris.Remove(LoggedTris[i]); //Remove the LoggedTris from AllTris
+                // Remove intersecting triangles from AllTris
+                foreach (int indexToRemove in trianglesToRemove.OrderByDescending(i => i))
+                {
+                    AllTris.RemoveAt(indexToRemove);
+                }
             }
 
-            return LoggedTris;
-
-        }
-        else
-        {
-            LoggedTris.Add(InputTriangle); //The triangle has no connections, so it must be it's own shell. 
-
-            return LoggedTris;
-        }
+        return LoggedTris;
 
 
     }
