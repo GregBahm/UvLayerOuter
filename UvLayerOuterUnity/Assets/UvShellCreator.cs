@@ -35,7 +35,7 @@ public class UvShellCreator : MonoBehaviour
         }
 
         
-        for (int x = mesh.triangles.Length - 1; x > 0; x--)
+        for (int x = AllTris.Count - 1; x > 0; x--)
         {
             Debug.Log("Check");
             IntermediateTris.Add(AllTris[x]); //Add the first triangle to start the process. 
@@ -44,11 +44,14 @@ public class UvShellCreator : MonoBehaviour
 
             UvShell shell = new UvShell(LoggedTris);//Once all connectingTris are found put the LoggedTris into a Hash list called Shell
 
+            IntermediateTris.Clear();
+
             CompletedUvShells.Add(shell);//Add completed shells to a list
         }
 
         return CompletedUvShells; //return total count
     }
+
     private static List<Tri> LogConnectingTris(List<Tri> InputTriangle, List<Tri> AllTris) // Log intersecting triangles
     {
         List<Tri> LoggedTris = new List<Tri>();
@@ -95,9 +98,6 @@ public class UvShellCreator : MonoBehaviour
 
     }
 }
-
-
-
 
 public class Tri
 {
