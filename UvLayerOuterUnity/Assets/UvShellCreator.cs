@@ -26,6 +26,7 @@ public class UvShellCreator : MonoBehaviour
 
         List<UvShell> CompletedUvShells = new List<UvShell>(); //Make a list of completed UV shells that we can borrow away from AllUvShells
 
+        
 
         for (int x = 0; x < mesh.triangles.Length; x += 3) //add all the tris to AllUvShells
         {
@@ -33,6 +34,13 @@ public class UvShellCreator : MonoBehaviour
             AllTris.Add(Tri);
         }
 
+        
+        for (int x = mesh.triangles.Length - 1; x > 0; x--)
+        {
+            //##### ADD LOGIC FOR LOOPING THROUGH ALL TRIS HERE ####
+        }
+
+        
         IntermediateTris.Add(AllTris[2]); //Add the first triangle to start the process. 
 
 
@@ -40,12 +48,16 @@ public class UvShellCreator : MonoBehaviour
 
 
 
-        return LoggedTris;
+        return AllTris;
     }
     private static List<Tri> LogConnectingTris(List<Tri> InputTriangle, List<Tri> AllTris) // Log intersecting triangles
     {
         List<Tri> LoggedTris = new List<Tri>();
         List<int> trianglesToRemove = new List<int>();
+        List<Tri> ExtraTris = new List<Tri>();
+
+        int previousLength = 1;
+
 
         for (int x = 0; x < InputTriangle.Count; x++)
         {
@@ -68,9 +80,18 @@ public class UvShellCreator : MonoBehaviour
                 {
                     AllTris.RemoveAt(indexToRemove);
                 }
-            }
+        }
+
+        if (LoggedTris.Count > previousLength) //if the count of logged tris is more than the original tri do the thing again.
+        {
+            previousLength = LoggedTris.Count;
+            ExtraTris = LogConnectingTris(LoggedTris, AllTris);
+        }
+
+        LoggedTris.AddRange(ExtraTris);
 
         return LoggedTris;
+        
 
 
     }
