@@ -13,13 +13,13 @@ public class UvShellCreator : MonoBehaviour
 
     private void Start()
     {
-        List<Tri> avatarShells = GetUvShells(Avatar);
+        List<UvShell> avatarShells = GetUvShells(Avatar);
         Debug.Log($"Tri point is {avatarShells.Count}"); //Looking for 86
 
 
     }
 
-    public static List<Tri> GetUvShells(Mesh mesh)
+    public static List<UvShell> GetUvShells(Mesh mesh)
     {
         List<Tri> AllTris = new List<Tri>(); //Define a list that contains the entire shell array
         List<Tri> IntermediateTris = new List<Tri>(); //Make a list that holds information for shells being made
@@ -37,18 +37,17 @@ public class UvShellCreator : MonoBehaviour
         
         for (int x = mesh.triangles.Length - 1; x > 0; x--)
         {
-            //##### ADD LOGIC FOR LOOPING THROUGH ALL TRIS HERE ####
+            Debug.Log("Check");
+            IntermediateTris.Add(AllTris[x]); //Add the first triangle to start the process. 
+
+            List<Tri> LoggedTris = LogConnectingTris(IntermediateTris, AllTris); // returns a list of connected Tris and removes them from AllTris
+
+            UvShell shell = new UvShell(LoggedTris);//Once all connectingTris are found put the LoggedTris into a Hash list called Shell
+
+            CompletedUvShells.Add(shell);//Add completed shells to a list
         }
 
-        
-        IntermediateTris.Add(AllTris[2]); //Add the first triangle to start the process. 
-
-
-        List<Tri> LoggedTris = LogConnectingTris(IntermediateTris, AllTris); // returns a list of connected Tris and removes them from AllTris
-
-
-
-        return AllTris;
+        return CompletedUvShells; //return total count
     }
     private static List<Tri> LogConnectingTris(List<Tri> InputTriangle, List<Tri> AllTris) // Log intersecting triangles
     {
@@ -126,5 +125,20 @@ public class UvShell
     public UvShell(List<Tri> tri)
     {
         Shell = new List<Tri>(tri);
+    }
+    public HashSet<int> GetPoints()
+    {
+        HashSet<int> Vertex = new HashSet<int>();
+
+        for (int x = 0; x < Shell.Count; x += 3)
+        {
+            List <int> TriSet = Shell[x].GetTri();
+
+            HashSet<int> Interim = new HashSet<int>(TriSet);
+
+            Interim.UnionWith(Vertex);
+        }
+
+        return Vertex;
     }
 }
