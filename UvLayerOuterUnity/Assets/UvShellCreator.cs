@@ -13,13 +13,13 @@ public class UvShellCreator : MonoBehaviour
 
     private void Start()
     {
-        List<UvShell> avatarShells = GetUvShells(Avatar);
-        Debug.Log($"Tri point is {avatarShells.Count}"); //Looking for 86
+        List<Tri> avatarShells = GetUvShells(Avatar);
+        Debug.Log($"The amount of shells is {avatarShells.Count}"); //Looking for 86
 
 
     }
 
-    public static List<UvShell> GetUvShells(Mesh mesh)
+    public static List<Tri> GetUvShells(Mesh mesh)
     {
         List<Tri> AllTris = new List<Tri>(); //Define a list that contains the entire shell array
         List<Tri> IntermediateTris = new List<Tri>(); //Make a list that holds information for shells being made
@@ -34,11 +34,10 @@ public class UvShellCreator : MonoBehaviour
             AllTris.Add(Tri);
         }
 
-        
-        for (int x = AllTris.Count - 1; x > 0; x--)
+        int descentValue = 1;
+        for (int Tri = AllTris.Count -1; Tri >= 0; Tri-= descentValue) //### Doesn't check the number again ###
         {
-            Debug.Log("Check");
-            IntermediateTris.Add(AllTris[x]); //Add the first triangle to start the process. 
+            IntermediateTris.Add(AllTris[Tri]); //Add the first triangle to start the process. 
 
             List<Tri> LoggedTris = LogConnectingTris(IntermediateTris, AllTris); // returns a list of connected Tris and removes them from AllTris
 
@@ -47,18 +46,36 @@ public class UvShellCreator : MonoBehaviour
             IntermediateTris.Clear();
 
             CompletedUvShells.Add(shell);//Add completed shells to a list
+            descentValue = LoggedTris.Count;
         }
 
-        return CompletedUvShells; //return total count
+        return AllTris; //return total count
+    }
+
+    private IEnumerable<int> GetTriIndices(List<Tri> allTris, Tri inputTriangle)
+    {
+        List<int> inputTriangleValues = inputTriangle.GetTri();
+        for (int i = 0; i < allTris.Count; i++)
+        {
+            Tri theTriInQuestion = allTris[i];
+            List<int> theValues = theTriInQuestion.GetTri();
+            IEnumerable<int> theIntersection = theValues.Intersect(inputTriangleValues);
+            bool areThereAny = theIntersection.Any();
+            if (areThereAny)
+            {
+                yield return i;
+            }
+        }
     }
 
     private static List<Tri> LogConnectingTris(List<Tri> InputTriangle, List<Tri> AllTris) // Log intersecting triangles
     {
         List<Tri> LoggedTris = new List<Tri>();
-        List<int> trianglesToRemove = new List<int>();
+        HashSet<int> trianglesToRemove = new HashSet<int>();
         List<Tri> ExtraTris = new List<Tri>();
 
-        int previousLength = 1;
+        int previousLength = InputTriangle.Count;
+
 
 
         for (int x = 0; x < InputTriangle.Count; x++)
@@ -77,16 +94,26 @@ public class UvShellCreator : MonoBehaviour
             .Select(i => AllTris[i])
             .ToList();
 
-                // Remove intersecting triangles from AllTris
-                foreach (int indexToRemove in trianglesToRemove.OrderByDescending(i => i))
-                {
-                    AllTris.RemoveAt(indexToRemove);
-                }
+             
+        }
+        List<int> trianglesToRemoveList = trianglesToRemove.ToList();
+        // Remove intersecting triangles from AllTris
+        foreach (int indexToRemove in trianglesToRemoveList.OrderByDescending(i => i)) //If you remove the index, then the items will slot down and youll remove the wrong one
+        {
+            try
+            {
+                AllTris.RemoveAt(indexToRemove);
+            }
+            catch
+            {
+                Debug.Log("Cant remove");
+                continue;
+            }
+
         }
 
         if (LoggedTris.Count > previousLength) //if the count of logged tris is more than the original tri do the thing again.
         {
-            previousLength = LoggedTris.Count;
             ExtraTris = LogConnectingTris(LoggedTris, AllTris);
         }
 
