@@ -14,13 +14,13 @@ public class UvShellCreator : MonoBehaviour
 
     private void Start()
     {
-        List<Tri> avatarShells = GetUvShells(Avatar);
+        List<UvShell> avatarShells = GetUvShells(Avatar);
         Debug.Log($"The amount of shells is {avatarShells.Count}"); //Looking for 86
 
 
     }
 
-    public static List<Tri> GetUvShells(Mesh mesh)
+    public static List<UvShell> GetUvShells(Mesh mesh)
     {
         List<Tri> AllTris = new List<Tri>(); //Define a list that contains the entire shell array
         List<Tri> IntermediateTris = new List<Tri>(); //Make a list that holds information for shells being made
@@ -50,7 +50,7 @@ public class UvShellCreator : MonoBehaviour
             descentValue = LoggedTris.Count;
         }
 
-        return AllTris; //return total count
+        return CompletedUvShells; //return total count
     }
 
     private static IEnumerable<int> GetAllIntersectingTrisOfInput(List<Tri> allTris, Tri inputTriangle)
@@ -74,6 +74,8 @@ public class UvShellCreator : MonoBehaviour
         List<Tri> LoggedTris = new List<Tri>();
         HashSet<int> trianglesToRemove = new HashSet<int>();
         List<Tri> ExtraTris = new List<Tri>();
+        List<int> ConnectingTrianglesInt = new List<int>();
+
 
         int previousLength = inputTriangle.Count;
 
@@ -83,12 +85,22 @@ public class UvShellCreator : MonoBehaviour
         {
             Tri inputTri = inputTriangle[x];
             List<int> intersectors = GetAllIntersectingTrisOfInput(allTris, inputTri).ToList();
-            foreach (int intersector in intersectors)
+
+            foreach (int intersector in intersectors)  /// ###### ERROR IF THE INTERSECTING TRI IS THE SAME THEN IT ADDS THOSE SAME TRIANLGES MULTIPLE TIMES #####
             {
-                LoggedTris.Add(allTris[intersector]);
-                trianglesToRemove.Add(intersector);
+                ConnectingTrianglesInt.Add(intersector);
+                //LoggedTris.Add(allTris[intersector]);
+                //trianglesToRemove.Add(intersector);
             }
         }
+
+        HashSet<int> ConnectingTrianglesIntHS = new HashSet<int>(ConnectingTrianglesInt);
+        foreach (int intersector in ConnectingTrianglesIntHS)
+        {
+            LoggedTris.Add(allTris[intersector]);
+            trianglesToRemove.Add(intersector);
+        }
+
 
         List<int> trianglesToRemoveList = trianglesToRemove.ToList();
         // Remove intersecting triangles from AllTris
