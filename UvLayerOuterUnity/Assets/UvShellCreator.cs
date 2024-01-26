@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -52,7 +53,7 @@ public class UvShellCreator : MonoBehaviour
         return AllTris; //return total count
     }
 
-    private IEnumerable<int> GetTriIndices(List<Tri> allTris, Tri inputTriangle)
+    private static IEnumerable<int> GetAllIntersectingTrisOfInput(List<Tri> allTris, Tri inputTriangle)
     {
         List<int> inputTriangleValues = inputTriangle.GetTri();
         for (int i = 0; i < allTris.Count; i++)
@@ -68,32 +69,25 @@ public class UvShellCreator : MonoBehaviour
         }
     }
 
-    private static List<Tri> LogConnectingTris(List<Tri> InputTriangle, List<Tri> AllTris) // Log intersecting triangles
+    private static List<Tri> LogConnectingTris(List<Tri> inputTriangle, List<Tri> allTris) // Log intersecting triangles
     {
         List<Tri> LoggedTris = new List<Tri>();
         HashSet<int> trianglesToRemove = new HashSet<int>();
         List<Tri> ExtraTris = new List<Tri>();
 
-        int previousLength = InputTriangle.Count;
+        int previousLength = inputTriangle.Count;
 
 
 
-        for (int x = 0; x < InputTriangle.Count; x++)
+        for (int x = 0; x < inputTriangle.Count; x++)
         {
-            LoggedTris = Enumerable.Range(0, AllTris.Count)
-            .Where(i =>
+            Tri inputTri = inputTriangle[x];
+            List<int> intersectors = GetAllIntersectingTrisOfInput(allTris, inputTri).ToList();
+            foreach (int intersector in intersectors)
             {
-                bool intersects = AllTris[i].GetTri().Intersect(InputTriangle[x].GetTri()).Any();
-                if (intersects)
-                {
-                    // If intersected, mark the triangle index for removal
-                    trianglesToRemove.Add(i);
-                }
-                return intersects;
-            })
-            .Select(i => AllTris[i])
-            .ToList();
-
+                LoggedTris.Add(allTris[intersector]);
+            }
+            trianglesToRemove.AddRange(intersectors);
              
         }
         List<int> trianglesToRemoveList = trianglesToRemove.ToList();
@@ -102,7 +96,7 @@ public class UvShellCreator : MonoBehaviour
         {
             try
             {
-                AllTris.RemoveAt(indexToRemove);
+                allTris.RemoveAt(indexToRemove);
             }
             catch
             {
@@ -114,7 +108,7 @@ public class UvShellCreator : MonoBehaviour
 
         if (LoggedTris.Count > previousLength) //if the count of logged tris is more than the original tri do the thing again.
         {
-            ExtraTris = LogConnectingTris(LoggedTris, AllTris);
+            ExtraTris = LogConnectingTris(LoggedTris, allTris);
         }
 
         LoggedTris.AddRange(ExtraTris);
