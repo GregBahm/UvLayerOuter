@@ -86,10 +86,10 @@ public class UvShellCreator : MonoBehaviour
             foreach (int intersector in intersectors)
             {
                 LoggedTris.Add(allTris[intersector]);
+                trianglesToRemove.Add(intersector);
             }
-            trianglesToRemove.AddRange(intersectors);
-             
         }
+
         List<int> trianglesToRemoveList = trianglesToRemove.ToList();
         // Remove intersecting triangles from AllTris
         foreach (int indexToRemove in trianglesToRemoveList.OrderByDescending(i => i)) //If you remove the index, then the items will slot down and youll remove the wrong one
