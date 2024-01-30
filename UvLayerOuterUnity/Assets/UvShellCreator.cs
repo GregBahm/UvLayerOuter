@@ -86,11 +86,9 @@ public class UvShellCreator : MonoBehaviour
             Tri inputTri = inputTriangle[x];
             List<int> intersectors = GetAllIntersectingTrisOfInput(allTris, inputTri).ToList();
 
-            foreach (int intersector in intersectors)  /// ###### ERROR IF THE INTERSECTING TRI IS THE SAME THEN IT ADDS THOSE SAME TRIANLGES MULTIPLE TIMES #####
+            foreach (int intersector in intersectors)
             {
                 ConnectingTrianglesInt.Add(intersector);
-                //LoggedTris.Add(allTris[intersector]);
-                //trianglesToRemove.Add(intersector);
             }
         }
 
@@ -106,19 +104,10 @@ public class UvShellCreator : MonoBehaviour
         // Remove intersecting triangles from AllTris
         foreach (int indexToRemove in trianglesToRemoveList.OrderByDescending(i => i)) //If you remove the index, then the items will slot down and youll remove the wrong one
         {
-            try
-            {
-                allTris.RemoveAt(indexToRemove);
-            }
-            catch
-            {
-                Debug.Log("Cant remove");
-                continue;
-            }
-
+            allTris.RemoveAt(indexToRemove);
         }
 
-        if (LoggedTris.Count > previousLength) //if the count of logged tris is more than the original tri do the thing again.
+        if (LoggedTris.Count + previousLength > previousLength) //if the count of logged tris is more than the original tri do the thing again.
         {
             ExtraTris = LogConnectingTris(LoggedTris, allTris);
         }
